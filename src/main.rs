@@ -1,9 +1,6 @@
-use std::{fs::File, path::PathBuf};
-
 use anyhow::Result;
-use flate2::read::GzDecoder;
 use lapce_plugin::{
-    Http, LapcePlugin, PLUGIN_RPC,
+    LapcePlugin, PLUGIN_RPC,
     psp_types::{
         Request,
         lsp_types::{DocumentFilter, InitializeParams, MessageType, Url, request::Initialize},
@@ -31,81 +28,41 @@ pub struct Configuration {
 
 register_plugin!(State);
 
+use std::process::Command;
+
 fn initialize(params: InitializeParams) -> Result<()> {
+    // 1. Resolve server path:
+    //    - use explicit serverPath if provided
+    //    - otherwise default to "rust-analyzer"
     let server_path = params
         .initialization_options
         .as_ref()
         .and_then(|options| options.get("serverPath"))
-        .and_then(|server_path| server_path.as_str())
-        .and_then(|server_path| {
-            if !server_path.is_empty() {
-                Some(server_path)
-            } else {
-                None
-            }
-        });
+        .and_then(|v| v.as_str())
+        .filter(|s| !s.is_empty())
+        .unwrap_or("rust-analyzer");
 
-    if let Some(server_path) = server_path {
-        // TODO: once nightly is released, update plugin api to use request version of start lsp
-        // that will inform us of the error
-        PLUGIN_RPC.start_lsp(
-            Url::parse(&format!("urn:{}", server_path))?,
-            Vec::new(),
-            vec![DocumentFilter {
-                language: Some("rust".to_string()),
-                scheme: None,
-                pattern: None,
-            }],
-            params.initialization_options,
+    // 2. Verify that rust-analyzer is available
+    let available = Command::new(server_path)
+        .arg("--version")
+        .output()
+        .is_ok();
+
+    if !available {
+        PLUGIN_RPC.window_show_message(
+            MessageType::WARNING,
+            format!(
+                "rust-analyzer not found: '{}'. Please install rust-analyzer \
+                 or configure 'serverPath' in the plugin settings.",
+                server_path
+            ),
         );
         return Ok(());
     }
 
-    let arch = match std::env::var("VOLT_ARCH").as_deref() {
-        Ok("x86_64") => "x86_64",
-        Ok("aarch64") => "aarch64",
-        _ => return Ok(()),
-    };
-    let os = match std::env::var("VOLT_OS").as_deref() {
-        Ok("linux") => "unknown-linux-gnu",
-        Ok("macos") => "apple-darwin",
-        Ok("windows") => "pc-windows-msvc",
-
-        _ => return Ok(()),
-    };
-    let file_name = format!("rust-analyzer-{}-{}", arch, os);
-    let file_path = PathBuf::from(&file_name);
-    let gz_path = PathBuf::from(file_name.clone() + ".gz");
-    if !file_path.exists() {
-        let result: Result<()> = {
-            let url = format!(
-                "https://github.com/rust-lang/rust-analyzer/releases/latest/download/{}.gz",
-                file_name
-            );
-            {
-                let mut resp = Http::get(&url)?;
-                let body = resp.body_read_all()?;
-                std::fs::write(&gz_path, body)?;
-                let mut gz = GzDecoder::new(File::open(&gz_path)?);
-                let mut file = File::create(&file_name)?;
-                std::io::copy(&mut gz, &mut file)?;
-            }
-            std::fs::remove_file(&gz_path)?;
-            Ok(())
-        };
-        if result.is_err() {
-            PLUGIN_RPC.window_show_message(
-                MessageType::ERROR,
-                "can't download rust-analyzer, please use server path in the settings.".to_string(),
-            );
-            return Ok(());
-        }
-    }
-
-    let volt_uri = std::env::var("VOLT_URI")?;
-    let server_path = Url::parse(&volt_uri)?.join(&file_name)?;
+    // 3. Start LSP
     PLUGIN_RPC.start_lsp(
-        server_path,
+        Url::parse(&format!("urn:{}", server_path))?,
         Vec::new(),
         vec![DocumentFilter {
             language: Some("rust".to_string()),
@@ -114,8 +71,10 @@ fn initialize(params: InitializeParams) -> Result<()> {
         }],
         params.initialization_options,
     );
+
     Ok(())
 }
+
 
 impl LapcePlugin for State {
     fn handle_request(&mut self, _id: u64, method: String, params: Value) {

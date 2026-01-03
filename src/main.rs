@@ -3,11 +3,12 @@ use std::{fs::File, path::PathBuf};
 use anyhow::Result;
 use flate2::read::GzDecoder;
 use lapce_plugin::{
+    Http, LapcePlugin, PLUGIN_RPC,
     psp_types::{
-        lsp_types::{request::Initialize, DocumentFilter, InitializeParams, MessageType, Url},
         Request,
+        lsp_types::{DocumentFilter, InitializeParams, MessageType, Url, request::Initialize},
     },
-    register_plugin, Http, LapcePlugin, PLUGIN_RPC,
+    register_plugin,
 };
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
@@ -86,7 +87,7 @@ fn initialize(params: InitializeParams) -> Result<()> {
                 let body = resp.body_read_all()?;
                 std::fs::write(&gz_path, body)?;
                 let mut gz = GzDecoder::new(File::open(&gz_path)?);
-                let mut file = File::create("rust-analyzer")?;
+                let mut file = File::create(&file_name)?;
                 std::io::copy(&mut gz, &mut file)?;
             }
             std::fs::remove_file(&gz_path)?;

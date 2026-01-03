@@ -87,7 +87,7 @@ fn initialize(params: InitializeParams) -> Result<()> {
                 let body = resp.body_read_all()?;
                 std::fs::write(&gz_path, body)?;
                 let mut gz = GzDecoder::new(File::open(&gz_path)?);
-                let mut file = File::create(&file_name)?;
+                let mut file = File::create(&file_path)?;
                 std::io::copy(&mut gz, &mut file)?;
             }
             std::fs::remove_file(&gz_path)?;

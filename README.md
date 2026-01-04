@@ -29,3 +29,5 @@ You can find the path by running:
 which rust-analyzer # on Linux/macOS
 where rust-analyzer # on Windows
 ```
+### Contributing
+Contributions and bug reports are welcome! Please open a pull request or an issue in this repository.

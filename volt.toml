@@ -1,5 +1,5 @@
 name = "lapce-rust"
-version = "0.4.11"
+version = "0.4.12"
 author = "Lapce"
 display-name = "Rust"
 description = "Rust for Lapce: Powered by Rust Analyzer"

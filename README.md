@@ -1,5 +1,6 @@
 # lapce-rust
 
+<<<<<<< HEAD
 Lapce plugin for the Rust programming language, providing Language Server Protocol (LSP) support through [rust-analyzer](https://github.com/rust-lang/rust-analyzer).
 
 This project is a fork of the official Lapce Rust plugin:
@@ -29,3 +30,7 @@ You can find the path by running:
 which rust-analyzer # on Linux/macOS
 where rust-analyzer # on Windows
 ```
+=======
+Lapce plugin for Rust programming language, which provides the LSP through [Rust-Analyzer](https://github.com/rust-lang/rust-analyzer)
+This project is a fork of https://github.com/lapce/lapce-rust
+>>>>>>> bfd9687f840c079cd9bbbe8db328fc114c42d911

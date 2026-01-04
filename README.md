@@ -9,25 +9,39 @@ https://github.com/lapce/lapce-rust
 
 ## Requirements
 
-This plugin **does not bundle rust-analyzer**.
+This plugin can use **rust-analyzer** in three ways:
 
-You must have **rust-analyzer installed and available in your system `PATH`**, or configure its location manually in the plugin settings.
+1. **Server Path** (recommended)
+   Set the full path to your `rust-analyzer` executable in the plugin settings under **Server Path**.
 
-### Install rust-analyzer (recommended)
+2. **System PATH**
+   If `Server Path` is empty, the plugin will attempt to use `rust-analyzer` available in your system `PATH`.
+   Verify with:
 
-If you use `rustup`:
+   ```bash
+   rust-analyzer --version
+   ```
+
+3. **Automatic Download**
+  If rust-analyzer is not found in PATH, the plugin will automatically download the appropriate binary for your system based on VOLT_OS and VOLT_ARCH.
+
+## Install rust-analyzer (optional)
+
+If you want to manage it manually with rustup:
 
 ```bash
 rustup component add rust-analyzer
 rust-analyzer --version
 ```
-### Configure rust-analyzer path manually (optional)
 
-Open the plugin settings (Ctrl + ,) and set **Server Path** to the location of your rust-analyzer executable.
+## Configure rust-analyzer path manually (optional)
+
+Open the plugin settings (Ctrl + ,) and set Server Path to the location of your rust-analyzer executable.
 You can find the path by running:
 ```bash
 which rust-analyzer # on Linux/macOS
 where rust-analyzer # on Windows
 ```
-### Contributing
+## Contributing
+
 Contributions and bug reports are welcome! Please open a pull request or an issue in this repository.
